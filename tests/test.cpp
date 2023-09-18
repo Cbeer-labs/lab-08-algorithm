@@ -1,8 +1,6 @@
-// Copyright 2020 Your Name <your_email>
+// Copyright 2023 Your Name <your_email>
 
 #include <gtest/gtest.h>
-
-#include <header.hpp>
 
 bool operator==(const Student& a, const Student& b)
 {
