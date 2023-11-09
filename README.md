@@ -14,7 +14,53 @@
 
 Описание всех алгоритмов вы найдете по [ссылке](https://en.cppreference.com/w/cpp/algorithm).
 
-### Использование алгоритмов STL
+Также в C++20 библиотека алгоритмов была "расширена" библиотекой `<ranges>`. В ней ключевой
+сущностью выступает "представление". Для понимания представлений необходимо ввести несколько
+понятий.
+- _Ленивое исполнение_ - (как противопоставление скорому) исполнение какого-либо алгоритма в момент
+необходимости получения представления его результатов. При скором исполнении, в сравнении,
+представление результатов алгоритма заготавливается предварительно.
+
+Примеры:
+
+``` cpp
+void start_serving(const UserRepresentation&);
+void start_serving_lazy(const FileStructure&, UserRepresentation get_repr*);
+
+int main() {
+  // imagine a file has been read here
+  FileStructure read_data;
+  // eager execution
+  UserRepresentation repr = get_user_representation(read_data);
+  start_serving(repr);
+  
+  // lazy execution
+  start_serving_lazy(read_data, get_user_representation);
+}
+```
+В этом примере ключевым моментом является то, что получение представления пользователя осуществляется
+по запросу, когда это представление непосредственно требуется. В общем случае, особенно когда
+требуемое пользовательское представление невозможно заготовить заранее (например при запросе в базу
+данных), подход ленивого программирования позволяет довольно просто избежать лишних операций.
+При скором исполнении же, получение представления будет осуществляться тогда, когда это захочет
+программист, что может привести, например, к получению всех сущностей, лишнего чтения диска, излишнего
+использования памяти и прочих неприятностей производительности.
+- _Функции высшего порядка_ - типичные функции над общим набором данных. Примеры некоторых из них:
+  - `map` - применить преобразование ко всем элементам набора данных (`std::transform`, `std::ranges::transform`
+    и `std::views::transform`)
+  - `filter` - пропустить элементы множества, не удовлетворяющие предикату (`std::remove_if`,
+    `std::ranges::remove_if`, `std::views::filter`)
+  - `reduce`, `fold` - объединить элементы набора данных какой-либо функцией, последовательно применяя её
+    к аккумулятору и следующему элементу (`std::reduce`, `std::accumulate`)
+- _Диапазон_ - пара итераторов, обозначающие начало и конец какого-либо набора данных. (`std::ranges::range`)
+- Наконец, _представление_ - диапазон, в котором получение доступа к данным осуществляется за
+  постоянную единицу времени. Примеры таких диапазонов - итераторы по контейнерам, тривиальные
+  генераторы данных (счётчик) или множество указателей на значения.
+
+Ввиду определения представления, можно сказать что функции высшего порядка `std::views::*`
+применимы всегда, когда допустимо применение алгоритмов STL.
+
+### Использование некоторых алгоритмов STL
 
 #### `std::find`
 Функция `std::find` ищет в диапазоне параметров `[first, last)` первый элемент, равный `value`
@@ -52,9 +98,14 @@ bool even(int a)
 std::vector<int> v = {1, 3, 5, 6, 7, 8, 9};
 auto it2 = std::find_if(v.begin(), v.end(), even);
 if (it2 == v.end())
-  std::cout << "Все число нечетные";
+  std::cout << "Все числа нечетные";
 else
   std::cout << *it2;
+// или
+using namespace std::views;
+auto found = v | filter(even) | take(1);
+if (v.empty()) std::cout << "Все числа нечётные";
+else std::cout <<*found.begin();
 ```
 
 #### `std::count_if`
@@ -79,6 +130,10 @@ bool even(int a)
 std::vector<int> v = {1, 3, 5, 6, 7, 8, 9};
 auto count = std::count_if(v.begin(), v.end(), even);
 std::cout << count;
+// или
+using namespace std::views;
+auto needed = v | filter(even);
+std::cout << needed.size();
 ```
 
 #### `std::transform`
@@ -100,7 +155,8 @@ OutIter transform(InIter1 start1, InIter1 end1, InIter2 start2,
 в качестве первого параметра и элемент из второй последовательности в качестве второго параметра.
 Обе версии возвращают итератор, указывающий на конец результирующей последовательности.
 
-**Задача**. Заменить в исходном массиве все элементы на квадрат этих значений.
+**Задача**. Дан массив чисел. Преобразовать его в массив квадратов этих чисел.
+
 ```cpp
 int pow2(int a)
 {
@@ -113,9 +169,13 @@ std::transform(v.begin(), v.end(), v.begin(), pow2);
 // или так
 std::vector<int> v = {1, 3, 5, 6, 7, 8, 9};
 std::transform(v.begin(), v.end(), v.begin(), [](int a){ retunr a * a; });
+// или
+using namespace std::views;
+auto transformed = v | transform(pow2);
+v = std::vector<int>(transformed.begin(), transformed.end());
 ```
 
-**Задача**. Данно два массива, получить новый массив, каждый элемент которого будет равен сумме соответсвующих элементов в изначальном.
+**Задача**. Дано два массива, получить новый массив, каждый элемент которого будет равен сумме соответсвующих элементов в изначальных.
 ```cpp
 int sum(int a, int b)
 {
@@ -127,6 +187,10 @@ std::vector<int> v0 = {1, 3, 5, 6, 7, 8, 9};
 std::vector<int> v1 = {-1, -3, -5, -6, -7, -8, -9};
 std::vector<int> out(v0.size());
 std::transform(v0.begin(), v0.end(), v1.begin(), out.begin(), sum);
+// или
+using namespace std::views;
+auto output = zip(v0, v1) | transform([](std::tuple<int&, int&> pair) { std::get<0>(pair) + std::get<1>(pair) });
+out = std::vector<int>(output.begin(), output.end());
 ```
 
 #### `std::sort`
@@ -198,15 +262,15 @@ auto result = find_if(numbers.begin(), numbers.end(),
 
 
 ## Задание
-Требуется все задания выполнить с использованием библиотеки `<algorithm>`.
+Требуется все задания выполнить с использованием библиотеки `<algorithm>` или `<ranges>`.
 
-Пусть есть структура `Student`
+- Пусть есть структура `Student`
 ```cpp
 struct Student
 {
   std::string Name;
   std::string GroupId;
-  std::vector<unsigned> Ratings;
+  std::vector<uint8_t> Ratings;
   std::vector<std::string> Subjects;
 };
 ```
@@ -224,21 +288,13 @@ void SortByName(std::vector<Student>&);
 ```cpp
 void SortByRating(std::vector<Student>&);
 ```
-* вернет количество студентов имеющих неудовлетворительную оценку хотя бы по одному предмету;
+* вернет студентов имеющих неудовлетворительную оценку хотя бы по одному предмету;
 ```cpp
-size_t CountTwoness(const std::vector<Student>&);
+std::vector<Student> FilterTwoness(const std::vector<Student>&);
 ```
-* определит, сколько студентов сдали все экзамены на 5.
+* определит студентов, которые сдали все экзамены на 5.
 ```cpp
-size_t CountExcellent(const std::vector<Student>&);
-```
-* создаст массив `std::vector<Student>`, в который войдут студенты имеющие отметку отлично, по предмету "Math";
-```cpp
-std::vector<Student> VectorMathExcellent(const std::vector<Student>&);
-```
-* вернет массив уникальных названий групп студентов из списка students
-```cpp
-std::vector<std::string> GroupsId(const std::vector<Student>&);
+std::vector<Student> FilterExcellent(const std::vector<Student>&);
 ```
 * сформирует список групп, т.е. создаст массив структур `Group`
 ```cpp
@@ -253,3 +309,100 @@ struct Group
 ```cpp
 std::vector<Group> Groups(const std::vector<Student>&);
 ```
+
+- Вам предоставляется контейнер структур одного типа. Их надо преобразовать в другой тип.
+Типы структур:
+
+``` cpp
+// may be password hash, fingerprint, totp secret, etc. plain bytes
+using AuthFactor = std::vector<uint8_t>;
+
+// Исходная структура
+struct DatabaseRepr {
+  size_t id;
+  std::string name; // needs encoding
+  std::string surname; // needs encoding
+  int64_t date_of_birth; // unix timestamp
+  int64_t last_seen; // unix timestamp
+  std::vector<AuthFactor> auth_factors; // needs to be hidden
+};
+
+// Конечная структура
+using timepoint_t = std::chrono::time_point<std::chrono::steady_clock>;
+struct UserRepr {
+  size_t id; // leave as is. useful for reverse lookup
+  std::string name_encoded; // just replace everything strange with spaces.
+  std::string surname_encoded; // the same as name
+  timepoint_t date_of_birth;
+  timepoint_t last_seen;
+}; 
+```
+
+Прототип функции:
+
+``` cpp
+std::vector<UserRepr> userRepresent(std::vector<DatabaseRepr>::const_iterator begin,
+                                      std::vector<DatabaseRepr>::const_iterator end);
+```
+
+- Вам предоставляется несколько контейнеров со структурами. Типы структур:
+
+``` cpp
+struct StudentDatabaseRepr {
+  uint32_t id;
+  std::string name;
+};
+
+struct StudentRatingsDatabaseRepr {
+  uint32_t id;
+  uint32_t student_id;
+  std::string subject;
+  uint8_t rating;
+};
+
+struct GroupsDatabaseRepr {
+  uint32_t id;
+  std::string group_name;
+};
+
+struct GroupsStudentsBinding {
+  uint32_t student_id;
+  uint32_t group_id;
+};
+```
+
+Их необходимо объединить в один массив групп:
+
+``` cpp
+struct GroupUserRepr {
+  std::string name;
+  std::vector<StudentsRepr> members;
+};
+
+// где
+
+struct StudentRepr {
+  std::string name;
+  std::vector<Rating> ratings;
+};
+
+// и
+
+struct Rating {
+  std::string subject;
+  uint8_t rating;
+};
+```
+
+Прототип:
+
+``` cpp
+std::vector<GroupUserRepr> GroupsRequestAssemble(
+  const std::vector<StudentDatabaseRepr>& db_students,
+  const std::vector<StudentRatingsDatabaseRepr>& db_ratings,
+  const std::vector<GroupsDatabaseRepr>& db_groups,
+  const std::vector<GroupsStudentsBinding>& db_groups_students
+);
+```
+
+

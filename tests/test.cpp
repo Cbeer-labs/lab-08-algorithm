@@ -1,6 +1,10 @@
 // Copyright 2023 Your Name <your_email>
 
 #include <gtest/gtest.h>
+#include "lab-08.hpp"
+#include <vector>
+#include <chrono>
+#include <cstdint>
 
 bool operator==(const Student& a, const Student& b)
 {
@@ -16,8 +20,27 @@ bool operator==(const Group& a, const Group& b)
         a.Students == b.Students;
 }
 
-class TestLab : public ::testing::Test
-{
+bool operator==(const UserRepr& lhs, const UserRepr& rhs) {
+    return lhs.id == rhs.id &&
+        lhs.name_encoded == rhs.name_encoded &&
+        lhs.surname_encoded == rhs.surname_encoded &&
+        lhs.date_of_birth == rhs.date_of_birth &&
+        lhs.last_seen == rhs.last_seen;
+}
+
+bool operator==(const GroupUserRepr& lhs, const GroupUserRepr& rhs) {
+    return lhs.name == rhs.name && lhs.members == rhs.members;
+}
+
+bool operator==(const StudentRepr& lhs, const StudentRepr& rhs) {
+    return lhs.name == rhs.name && lhs.ratings ==rhs.ratings;
+}
+
+bool operator==(const Rating& lhs, const Rating& rhs) {
+    return lhs.subject == rhs.subject && lhs.rating == rhs.rating;
+}
+
+class TestFirstPart : public ::testing::Test {
 protected:
     void SetUp() {
     // TODO add empty ratings
@@ -50,16 +73,16 @@ protected:
     }
 
 public:
-    std::vector<unsigned> Ratings1;
-    std::vector<unsigned> Ratings2;
-    std::vector<unsigned> Ratings3;
-    std::vector<unsigned> Ratings4;
-    std::vector<unsigned> Ratings5;
-    std::vector<unsigned> Ratings6;
-    std::vector<unsigned> Ratings7;
-    std::vector<unsigned> Ratings8;
-    std::vector<unsigned> Ratings9;
-    std::vector<unsigned> Ratings10;
+    std::vector<uint8_t> Ratings1;
+    std::vector<uint8_t> Ratings2;
+    std::vector<uint8_t> Ratings3;
+    std::vector<uint8_t> Ratings4;
+    std::vector<uint8_t> Ratings5;
+    std::vector<uint8_t> Ratings6;
+    std::vector<uint8_t> Ratings7;
+    std::vector<uint8_t> Ratings8;
+    std::vector<uint8_t> Ratings9;
+    std::vector<uint8_t> Ratings10;
     std::vector<std::string> Subjects1;
     std::vector<std::string> Subjects2;
     std::vector<std::string> Subjects3;
@@ -75,8 +98,226 @@ public:
     Student student10;
 };
 
+class TestSecondPart : public ::testing::Test {
+protected:
+    void SetUp() {
+        row1 = DatabaseRepr {
+            0,
+            "Asya\n\n",
+            "Pipkin;",
+            1100003267,
+            1696544867,
+            {{0, 1, 2, 3}},
+        };
+        row2 = DatabaseRepr {
+            1,
+            "Ro.mka",
+            "Kilki31-n",
+            1052144327,
+            1672329647,
+            {{3, 2, 2, 1}},
+        };
+        row3 = DatabaseRepr {
+            2,
+            "Pe\\t=ya",
+            "Pu\389021pkin",
+            1104984047,
+            1672329647,
+            {{3, 1, 2, 1}},
+        };
+        row4 = DatabaseRepr {
+            3,
+            "Vasya\n\n\n\n\n\t\n\1\2",
+            "Vasilyev\1\2\3",
+            1103273891,
+            1672321233,
+            {{3, 5, 2, 9}},
+        };
+        row5 = DatabaseRepr {
+            4,
+            "Alice\\",
+            "Sh",
+            1103254324,
+            1673349021,
+            {{0, 2, 0, 1}},
+        };
+        row6 = DatabaseRepr {
+            5,
+            "A,./,./nton",
+            "Bul-=``kin",
+            1104327911,
+            1672980423,
+            {{34, 2, 23, 1}},
+        };
+        row7 = DatabaseRepr {
+            6,
+            "Rob\\.\7\6\4\3ert",
+            "Tr12345678ebor",
+            1104290138,
+            1672490812,
+            {{59, 23, 1}},
+        };
+        row8 = DatabaseRepr {
+            7,
+            "Van\n\r\n,,,ya",
+            "Iv-=`-`anov",
+            1104738911,
+            1672329647,
+            {{3, 2}},
+        };
+        row9 = DatabaseRepr {
+            8,
+            "Uma",
+            "Umkin",
+            1104984047,
+            1672329647,
+            {{3, 2, 2, 1}},
+        };
+        row10 = DatabaseRepr {
+            9,
+            "Inga",
+            "Ignatova",
+            1104289301,
+            1672279136,
+            {},
+        };
+        result1 = UserRepr {
+            0,
+            "Asya",
+            "Pipkin",
+            timepoint_t(std::chrono::seconds(1100003267)),
+            timepoint_t(std::chrono::seconds(1696544867)),
+        };
+        result2 = UserRepr {
+            1,
+            "Romka",
+            "Kilkin",
+            timepoint_t(std::chrono::seconds(1052144327)),
+            timepoint_t(std::chrono::seconds(1672329647)),
+        };
+        result3 = UserRepr {
+            2,
+            "Petya",
+            "Pupkin",
+            timepoint_t(std::chrono::seconds(1104984047)),
+            timepoint_t(std::chrono::seconds(1672329647)),
+        };
+        result4 = UserRepr {
+            3,
+            "Vasya",
+            "Vasilyev",
+            timepoint_t(std::chrono::seconds(1103273891)),
+            timepoint_t(std::chrono::seconds(1672321233)),
+        };
+        result5 = UserRepr {
+            4,
+            "Alice",
+            "Sh",
+            timepoint_t(std::chrono::seconds(1103254324)),
+            timepoint_t(std::chrono::seconds(1673349021)),
+        };
+        result6 = UserRepr {
+            5,
+            "Anton",
+            "Bulkin",
+            timepoint_t(std::chrono::seconds(1104327911)),
+            timepoint_t(std::chrono::seconds(1672980423)),
+        };
+        result7 = UserRepr {
+            6,
+            "Robert",
+            "Trebor",
+            timepoint_t(std::chrono::seconds(1104290138)),
+            timepoint_t(std::chrono::seconds(1672490812)),
+        };
+        result8 = UserRepr {
+            7,
+            "Vanya",
+            "Ivanov",
+            timepoint_t(std::chrono::seconds(1104738911)),
+            timepoint_t(std::chrono::seconds(1672329647)),
+        };
+        result9 = UserRepr {
+            8,
+            "Uma",
+            "Umkin",
+            timepoint_t(std::chrono::seconds(1104984047)),
+            timepoint_t(std::chrono::seconds(1672329647)),
+        };
+        result10 = UserRepr {
+            9,
+            "Inga",
+            "Ignatova",
+            timepoint_t(std::chrono::seconds(1104289301)),
+            timepoint_t(std::chrono::seconds(1672279136)),
+        };
+    }
+public:
+    DatabaseRepr row1;
+    DatabaseRepr row2;
+    DatabaseRepr row3;
+    DatabaseRepr row4;
+    DatabaseRepr row5;
+    DatabaseRepr row6;
+    DatabaseRepr row7;
+    DatabaseRepr row8;
+    DatabaseRepr row9;
+    DatabaseRepr row10;
+    UserRepr result1;
+    UserRepr result2;
+    UserRepr result3;
+    UserRepr result4;
+    UserRepr result5;
+    UserRepr result6;
+    UserRepr result7;
+    UserRepr result8;
+    UserRepr result9;
+    UserRepr result10;
+};
+
+class TestThirdPart : public ::testing::Test {
+protected:
+    void SetUp() {
+        db_stud1 = { 0, "Asya" };
+        db_stud2 = { 1, "Romka" };
+        db_stud3 = { 2, "Petya" };
+        db_stud4 = { 3, "Vasya" };
+        db_rate1 = { 0, 0, "Math", 5 };
+        db_rate2 = { 1, 1, "Math", 4 };
+        db_rate3 = { 2, 2, "Math", 3 };
+        db_rate4 = { 3, 3, "Math", 4 };
+        db_rate5 = { 4, 2, "Philosophy", 2 };
+        db_rate6 = { 5, 1, "Programming", 5 };
+        db_group1 = { 0, "iu8-13" };
+        db_group2 = { 1, "iu8-14" };
+        db_group_stud1 = { 0, 0 };
+        db_group_stud2 = { 1, 1 };
+        db_group_stud3 = { 2, 0 };
+        db_group_stud4 = { 3, 1 };
+        db_group_stud5 = { 4, 0 };
+    }
+public:
+    StudentDatabaseRepr db_stud1;
+    StudentDatabaseRepr db_stud2;
+    StudentDatabaseRepr db_stud3;
+    StudentDatabaseRepr db_stud4;
+    StudentRatingsDatabaseRepr db_rate1;
+    StudentRatingsDatabaseRepr db_rate2;
+    StudentRatingsDatabaseRepr db_rate3;
+    StudentRatingsDatabaseRepr db_rate4;
+    StudentRatingsDatabaseRepr db_rate5;
+    StudentRatingsDatabaseRepr db_rate6;
+    GroupsDatabaseRepr db_group1;
+    GroupsDatabaseRepr db_group2;
+    GroupsStudentsBinding db_group_stud1;
+    GroupsStudentsBinding db_group_stud2;
+    GroupsStudentsBinding db_group_stud3;
+    GroupsStudentsBinding db_group_stud4;
+    GroupsStudentsBinding db_group_stud5;
+};
+
 // Сортировка студентов по именам
-TEST_F(TestLab, SortByName) {
+TEST_F(TestFirstPart, SortByName) {
     // базовый сценарий
     std::vector<Student> students =
     { student1, student2, student3, student4,
@@ -104,7 +345,7 @@ TEST_F(TestLab, SortByName) {
 }
 
 // Сортировка всех студентов по средней оценке
-TEST_F(TestLab, SortByRating) {
+TEST_F(TestFirstPart, SortByRating) {
     // базовый сценарий
     std::vector<Student> students =
     { student1, student2, student3, student4, student5,
@@ -131,120 +372,68 @@ TEST_F(TestLab, SortByRating) {
     EXPECT_EQ(students, result);
 }
 
-// Возвращаем количество двоечников
-TEST_F(TestLab, CountTwoness) {
+// Возвращаем двоечников
+TEST_F(TestFirstPart, FilterTwoness) {
     // базовый сценарий
     std::vector<Student> students =
     { student1, student2, student3, student4, student5,
-    student6, student10, student7, student8, student9 };
-    size_t count = 0;
-    count = CountTwoness(students);
-    EXPECT_EQ(2, count);
+    student6, student7, student8, student9, student10 };
+    auto filtered = FilterTwoness(students);
+    std::vector<Student> expected = { student9, student10 };
+    EXPECT_EQ(filtered, expected);
     // без двоечников
     students =
     { student1, student2, student3, student4,
     student5, student6, student7, student8 };
-    count = CountTwoness(students);
-    EXPECT_EQ(0, count);
+    filtered = FilterTwoness(students);
+    expected = {};
+    EXPECT_EQ(filtered, expected);
     // вектор с одним элементом
     students = { student9 };
-    count = CountTwoness(students);
-    EXPECT_EQ(1, count);
+    filtered = FilterTwoness(students);
+    expected = { student9 };
+    EXPECT_EQ(filtered, expected);
     // пустой вектор
     students = { };
-    count = CountTwoness(students);
-    EXPECT_EQ(0, count);
+    filtered = FilterTwoness(students);
+    expected = {};
+    EXPECT_EQ(filtered, expected);
 }
 
 // Количество отличников
-TEST_F(TestLab, CountExcellent) {
+TEST_F(TestFirstPart, FilterExcellent) {
     // базовый сценарий
     std::vector<Student> students =
     { student1, student2, student3, student4, student5,
-    student6, student10, student7, student8, student9 };
-    size_t count = 0;
-    count = CountExcellent(students);
-    EXPECT_EQ(2, count);
+    student6, student7, student8, student9, student10 };
+    auto filtered = FilterExcellent(students);
+    std::vector<Student> expected = { student1, student2 };
+    EXPECT_EQ(filtered, expected);
     // без отличников
     students =
     { student9, student10, student3, student4,
     student5, student6, student7, student8 };
-    count = CountExcellent(students);
-    EXPECT_EQ(0, count);
+    filtered = FilterExcellent(students);
+    expected = {};
+    EXPECT_EQ(filtered, expected);
     // вектор с одним элементом
     students = { student1 };
-    count = CountExcellent(students);
-    EXPECT_EQ(1, count);
+    filtered = FilterExcellent(students);
+    expected = { student1 };
+    EXPECT_EQ(filtered, expected);
     // пустой вектор
     students = { };
-    count = CountExcellent(students);
-    EXPECT_EQ(0, count);
-}
-
-// Создаем массив тех, кто получил по математике 5
-TEST_F(TestLab, VectorMathExcellent) {
-    // базовый сценарий
-    std::vector<Student> students =
-    { student1, student2, student3, student4, student5,
-    student6, student10, student7, student8, student9 };
-    std::vector<Student> result = { student1, student2, student5 };
-    students = VectorMathExcellent(students);
-    EXPECT_EQ(students, result);
-    // без отличников по математике
-    students = { student9, student10, student3, student4,
-    student6, student7, student8 };
-    result = { };
-    students = VectorMathExcellent(students);
-    EXPECT_EQ(students, result);
-    // без ребят с предметом математика
-    students = { student6, student7, student8, student9, student10 };
-    result = { };
-    students = VectorMathExcellent(students);
-    EXPECT_EQ(students, result);
-    // вектор с одним элементом
-    students = { student1 };
-    result = { student1 };
-    students = VectorMathExcellent(students);
-    EXPECT_EQ(students, result);
-    // пустой вектор
-    students = { };
-    result = { };
-    students = VectorMathExcellent(students);
-    EXPECT_EQ(students, result);
-}
-
-// Массив уникальных названий групп
-TEST_F(TestLab, GroupsId) {
-    // базовый сценарий
-    std::vector<Student> students =
-    { student1, student2, student3, student4, student5,
-    student6, student10, student7, student8, student9 };
-    std::vector<std::string> result = { "iu8-34", "iu9-54", "ibm3-12"};
-    std::vector<std::string> groups = GroupsId(students);
-    EXPECT_EQ(result, groups);
-    // все из одной группы
-    students = { student3, student4, student5 };
-    result = { "iu9-54" };
-    groups = GroupsId(students);
-    EXPECT_EQ(result, groups);
-    // вектор с одним элементом
-    students = { student1 };
-    result = { "iu8-34" };
-    groups = GroupsId(students);
-    EXPECT_EQ(result, groups);
-    // пустой вектор
-    students = { };
-    result = { };
-    groups = GroupsId(students);
-    EXPECT_EQ(result, groups);
+    filtered = FilterExcellent(students);
+    expected = {};
+    EXPECT_EQ(filtered, expected);
 }
 
 // массив структур Group
-TEST_F(TestLab, Groups) {
+TEST_F(TestFirstPart, Groups) {
     // базовый сценарий
     std::vector<Student> students =
     { student1, student2, student3, student4, student5,
-    student6, student10, student7, student8, student9 };
+    student6, student7, student8, student9, student10 };
     std::vector<Student> students1group = { student1, student2 };
     std::vector<Student> students2group = { student3, student4, student5 };
     std::vector<Student> students3group = { student6, student7, student8,
@@ -252,26 +441,83 @@ TEST_F(TestLab, Groups) {
     Group group1 = { "iu8-34", students1group };
     Group group2 = { "iu9-54", students2group };
     Group group3 = { "ibm3-12", students3group };
-    std::vector<Group> result = { group1, group2, group3 };
-    std::vector<Group> groups = Groups(students);
-    EXPECT_EQ(result, groups);
+    std::vector<Group> expected = { group1, group2, group3 };
+    auto result = Groups(students);
+    EXPECT_EQ(result, expected);
     // все из одной группы
     students = { student3, student4, student5 };
     students2group = { student3, student4, student5 };
     group2 = { "iu9-54", students2group };
-    result = { group2 };
-    groups = Groups(students);
-    EXPECT_EQ(result, groups);
+    expected = { group2 };
+    result = Groups(students);
+    EXPECT_EQ(result, expected);
     // вектор с одним элементом
     students = { student1 };
     students1group = { student1 };
     group1 = { "iu8-34", students1group };
-    result = { group1 };
-    groups = Groups(students);
-    EXPECT_EQ(result, groups);
+    expected = { group1 };
+    result = Groups(students);
+    EXPECT_EQ(result, expected);
     // пустой вектор
     students = { };
-    result = { };
-    groups = Groups(students);
-    EXPECT_EQ(result, groups);
+    expected = { };
+    result = Groups(students);
+    EXPECT_EQ(result, expected);
+}
+
+TEST_F(TestSecondPart, MapStructs) {
+    // general case
+    std::vector<DatabaseRepr> usersInDatabase = {
+        row1, row2, row3, row4, row5, row6, row7, row8, row9, row10
+    };
+    std::vector<UserRepr> expected = {
+        result1, result2, result3, result4, result5, result6, result7,
+        result8, result9, result10
+    };
+    std::vector<UserRepr> result = userRepresent(usersInDatabase.cbegin(),
+                                                    usersInDatabase.cend());
+    EXPECT_EQ(expected, result);
+    // empty
+    usersInDatabase = {};
+    expected = {};
+    result = userRepresent(usersInDatabase.cbegin(), usersInDatabase.cend());
+    EXPECT_EQ(expected, result);
+}
+
+TEST_F(TestThirdPart, ArrangeRange) {
+    std::vector<GroupUserRepr> result = GroupsRequestAssemble(
+        { db_stud1, db_stud2, db_stud3, db_stud4 },
+        { db_rate1, db_rate2, db_rate3, db_rate4, db_rate5, db_rate6 },
+        { db_group1, db_group2 },
+        { db_group_stud1, db_group_stud2, db_group_stud3, db_group_stud4 }
+        );
+    std::vector<GroupUserRepr> expected = {
+      {
+        "iu8-13",
+        {
+          {
+            "Asya",
+            {{"Math", 5}}
+          },
+          {
+            "Petya",
+            {{"Math", 3}, {"Philosophy", 2}}
+          }
+        }
+      },
+      {
+        "iu8-14",
+        {
+          {
+            "Romka",
+            {{"Math", 4}, {"Programming", 5}}
+          },
+          {
+            "Vasya",
+            {{"Math", 4}}
+          }
+        }
+      }
+    };
+    EXPECT_EQ(expected, result);
 }
